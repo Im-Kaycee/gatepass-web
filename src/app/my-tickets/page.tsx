@@ -98,9 +98,7 @@ function StatusBadge({ status }: { status: Ticket["status"] }) {
       border: "rgba(255,68,68,0.3)",
     },
   };
-
   const config = configs[status];
-
   return (
     <span
       style={{
@@ -193,9 +191,9 @@ function QRBack({ ticket }: { ticket: Ticket }) {
         Show this at the entrance
       </div>
 
-      <Link
+      <a
         href={`/tickets/${ticket.id}`}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
         style={{
           padding: "10px 24px",
           background: "var(--lime)",
@@ -208,7 +206,7 @@ function QRBack({ ticket }: { ticket: Ticket }) {
         }}
       >
         View full ticket
-      </Link>
+      </a>
 
       <div style={{ fontSize: "11px", color: "var(--muted)" }}>
         Tap to flip back
@@ -220,11 +218,12 @@ function QRBack({ ticket }: { ticket: Ticket }) {
 function TicketCard({ ticket }: { ticket: Ticket }) {
   const [flipped, setFlipped] = useState(false);
   const price = Number(ticket.ticket_type_price) || 0;
+  const isPast = new Date(ticket.event_date) <= new Date();
 
   return (
     <div
       style={{ perspective: "1000px", cursor: "pointer" }}
-      onClick={() => setFlipped(!flipped)}
+      onClick={() => !isPast && setFlipped(!flipped)}
     >
       <div
         style={{
@@ -235,6 +234,7 @@ function TicketCard({ ticket }: { ticket: Ticket }) {
           minHeight: "280px",
         }}
       >
+        {/* Front */}
         <div
           style={{
             position: "absolute",
@@ -245,13 +245,15 @@ function TicketCard({ ticket }: { ticket: Ticket }) {
             border: "1px solid var(--border)",
             borderRadius: "20px",
             overflow: "hidden",
+            opacity: isPast ? 0.6 : 1,
           }}
         >
           <div
             style={{
               padding: "24px",
-              background:
-                ticket.status === "VALID"
+              background: isPast
+                ? "linear-gradient(135deg, #1a1a1a 0%, #111 100%)"
+                : ticket.status === "VALID"
                   ? "linear-gradient(135deg, #1a2a0a 0%, #0f1a05 100%)"
                   : ticket.status === "CHECKED_IN"
                     ? "linear-gradient(135deg, #0a1a2a 0%, #051020 100%)"
@@ -265,6 +267,8 @@ function TicketCard({ ticket }: { ticket: Ticket }) {
                 justifyContent: "space-between",
                 alignItems: "flex-start",
                 marginBottom: "8px",
+                gap: "8px",
+                flexWrap: "wrap",
               }}
             >
               <span
@@ -276,9 +280,25 @@ function TicketCard({ ticket }: { ticket: Ticket }) {
               >
                 Gate<span style={{ color: "var(--lime)" }}>pass</span>
               </span>
-              <StatusBadge status={ticket.status} />
+              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                {isPast && (
+                  <span
+                    style={{
+                      padding: "4px 10px",
+                      borderRadius: "100px",
+                      fontSize: "11px",
+                      fontWeight: 500,
+                      background: "rgba(255,255,255,0.06)",
+                      color: "var(--muted)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                    }}
+                  >
+                    Expired
+                  </span>
+                )}
+                <StatusBadge status={ticket.status} />
+              </div>
             </div>
-
             <div
               style={{
                 fontFamily: "var(--font-display)",
@@ -291,12 +311,12 @@ function TicketCard({ ticket }: { ticket: Ticket }) {
             >
               {ticket.event_name}
             </div>
-
             <div
               style={{
                 fontSize: "12px",
-                color:
-                  ticket.status === "VALID"
+                color: isPast
+                  ? "var(--muted)"
+                  : ticket.status === "VALID"
                     ? "rgba(193,255,114,0.6)"
                     : "var(--muted)",
               }}
@@ -324,13 +344,12 @@ function TicketCard({ ticket }: { ticket: Ticket }) {
                 }}
               >
                 <CalendarIcon />
-                {new Date(ticket.created_at).toLocaleDateString("en-NG", {
+                {new Date(ticket.event_date).toLocaleDateString("en-NG", {
                   day: "numeric",
                   month: "short",
                   year: "numeric",
                 })}
               </div>
-
               <div
                 style={{
                   display: "flex",
@@ -342,47 +361,57 @@ function TicketCard({ ticket }: { ticket: Ticket }) {
               >
                 <TagIcon />₦{price.toLocaleString()}
               </div>
-
-              {ticket.event_type === "ONLINE" && ticket.online_link && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    fontSize: "13px",
-                    color: "var(--lime)",
-                  }}
-                >
-                  <LocationIcon />
-                  <a
-                    href={ticket.online_link}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    style={{ color: "var(--lime)", textDecoration: "none" }}
+              {ticket.event_type === "ONLINE" &&
+                ticket.online_link &&
+                !isPast && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      fontSize: "13px",
+                      color: "var(--lime)",
+                    }}
                   >
-                    Join link
-                  </a>
-                </div>
-              )}
+                    <LocationIcon />
+                    <a
+                      href={ticket.online_link}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                      style={{ color: "var(--lime)", textDecoration: "none" }}
+                    >
+                      Join link
+                    </a>
+                  </div>
+                )}
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                fontSize: "12px",
-                color: "var(--muted)",
-              }}
-            >
-              <span>Tap to view QR code</span>
-              <ChevronIcon />
-            </div>
+            {!isPast && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  fontSize: "12px",
+                  color: "var(--muted)",
+                }}
+              >
+                <span>Tap to view QR code</span>
+                <ChevronIcon />
+              </div>
+            )}
+
+            {isPast && (
+              <div style={{ fontSize: "12px", color: "var(--muted)" }}>
+                This event has passed
+              </div>
+            )}
           </div>
         </div>
 
-        {flipped && <QRBack ticket={ticket} />}
+        {/* Back — only mounted when flipped */}
+        {flipped && !isPast && <QRBack ticket={ticket} />}
       </div>
     </div>
   );
@@ -392,14 +421,8 @@ export default function MyTicketsPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuthStore();
   const [filter, setFilter] = useState<"ALL" | Ticket["status"]>("ALL");
+  const [activeView, setView] = useState<"upcoming" | "past">("upcoming");
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push("/login");
-    }
-  }, [isAuthenticated, authLoading, router]);
-
-  // useQuery must be called before any conditional return
   const { data: tickets = [], isLoading } = useQuery<Ticket[]>({
     queryKey: ["my-tickets"],
     queryFn: async () => {
@@ -409,7 +432,47 @@ export default function MyTicketsPage() {
     enabled: isAuthenticated,
   });
 
-  // Now safe to return early
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, authLoading, router]);
+
+  const now = new Date();
+
+  const upcomingTickets = tickets.filter(
+    (t) => new Date(t.event_date) > now || t.status === "CHECKED_IN",
+  );
+
+  const pastTickets = tickets.filter(
+    (t) => new Date(t.event_date) <= now && t.status !== "CHECKED_IN",
+  );
+
+  const sourceTickets =
+    activeView === "upcoming" ? upcomingTickets : pastTickets;
+
+  const filtered =
+    filter === "ALL"
+      ? sourceTickets
+      : sourceTickets.filter((t) => t.status === filter);
+
+  const counts = {
+    ALL: sourceTickets.length,
+    VALID: sourceTickets.filter((t) => t.status === "VALID").length,
+    CHECKED_IN: sourceTickets.filter((t) => t.status === "CHECKED_IN").length,
+    LISTED_FOR_SALE: sourceTickets.filter((t) => t.status === "LISTED_FOR_SALE")
+      .length,
+    CANCELLED: sourceTickets.filter((t) => t.status === "CANCELLED").length,
+  };
+
+  const filters: { key: "ALL" | Ticket["status"]; label: string }[] = [
+    { key: "ALL", label: "All" },
+    { key: "VALID", label: "Valid" },
+    { key: "CHECKED_IN", label: "Checked in" },
+    { key: "LISTED_FOR_SALE", label: "Listed" },
+    { key: "CANCELLED", label: "Cancelled" },
+  ];
+
   if (authLoading) {
     return (
       <div
@@ -436,26 +499,6 @@ export default function MyTicketsPage() {
     );
   }
 
-  const filtered =
-    filter === "ALL" ? tickets : tickets.filter((t) => t.status === filter);
-
-  const counts = {
-    ALL: tickets.length,
-    VALID: tickets.filter((t) => t.status === "VALID").length,
-    CHECKED_IN: tickets.filter((t) => t.status === "CHECKED_IN").length,
-    LISTED_FOR_SALE: tickets.filter((t) => t.status === "LISTED_FOR_SALE")
-      .length,
-    CANCELLED: tickets.filter((t) => t.status === "CANCELLED").length,
-  };
-
-  const filters: { key: "ALL" | Ticket["status"]; label: string }[] = [
-    { key: "ALL", label: "All" },
-    { key: "VALID", label: "Valid" },
-    { key: "CHECKED_IN", label: "Checked in" },
-    { key: "LISTED_FOR_SALE", label: "Listed" },
-    { key: "CANCELLED", label: "Cancelled" },
-  ];
-
   return (
     <div
       style={{
@@ -472,6 +515,7 @@ export default function MyTicketsPage() {
           padding: "clamp(40px, 5vw, 60px) clamp(24px, 5vw, 48px)",
         }}
       >
+        {/* Header */}
         <div
           style={{
             display: "flex",
@@ -495,7 +539,6 @@ export default function MyTicketsPage() {
             >
               {tickets.length} ticket{tickets.length !== 1 ? "s" : ""}
             </div>
-
             <h1
               style={{
                 fontFamily: "var(--font-display)",
@@ -508,7 +551,6 @@ export default function MyTicketsPage() {
               My tickets
             </h1>
           </div>
-
           <Link
             href="/events"
             style={{
@@ -526,149 +568,88 @@ export default function MyTicketsPage() {
           </Link>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            flexWrap: "wrap",
-            marginBottom: "32px",
-          }}
-        >
-          {filters.map(({ key, label }) =>
-            counts[key] > 0 || key === "ALL" ? (
-              <button
-                key={key}
-                onClick={() => setFilter(key)}
-                style={{
-                  padding: "8px 16px",
-                  background: filter === key ? "var(--lime)" : "var(--card)",
-                  border: `1px solid ${filter === key ? "var(--lime)" : "var(--border)"}`,
-                  borderRadius: "100px",
-                  color: filter === key ? "var(--black)" : "var(--muted)",
-                  fontSize: "13px",
-                  fontWeight: 500,
-                  cursor: "pointer",
-                  fontFamily: "var(--font-body)",
-                  transition: "all 0.2s",
-                }}
+        {/* Upcoming / Past toggle */}
+        <div style={{ display: "flex", gap: "8px", marginBottom: "24px" }}>
+          {(["upcoming", "past"] as const).map((view) => (
+            <button
+              key={view}
+              onClick={() => {
+                setView(view);
+                setFilter("ALL");
+              }}
+              style={{
+                padding: "8px 20px",
+                background: activeView === view ? "var(--lime)" : "var(--card)",
+                border: `1px solid ${activeView === view ? "var(--lime)" : "var(--border)"}`,
+                borderRadius: "100px",
+                color: activeView === view ? "var(--black)" : "var(--muted)",
+                fontSize: "13px",
+                fontWeight: 500,
+                cursor: "pointer",
+                fontFamily: "var(--font-body)",
+                transition: "all 0.2s",
+              }}
+            >
+              {view === "upcoming" ? "Upcoming" : "Past"}
+              <span
+                style={{ marginLeft: "6px", fontSize: "11px", opacity: 0.7 }}
               >
-                {label}
-                {counts[key] > 0 && (
-                  <span
-                    style={{
-                      marginLeft: "6px",
-                      fontSize: "11px",
-                      opacity: 0.7,
-                    }}
-                  >
-                    {counts[key]}
-                  </span>
-                )}
-              </button>
-            ) : null,
-          )}
+                {view === "upcoming"
+                  ? upcomingTickets.length
+                  : pastTickets.length}
+              </span>
+            </button>
+          ))}
         </div>
 
-        {isLoading && (
+        {/* Status filter tabs */}
+        {activeView === "upcoming" && (
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns:
-                "repeat(auto-fill, minmax(min(100%, 300px), 1fr))",
-              gap: "16px",
+              display: "flex",
+              gap: "8px",
+              flexWrap: "wrap",
+              marginBottom: "32px",
             }}
           >
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                style={{
-                  height: "280px",
-                  background: "var(--card)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "20px",
-                  animation: "shimmer 1.5s infinite",
-                }}
-              />
-            ))}
+            {filters
+              .filter(({ key }) => counts[key] > 0 || key === "ALL")
+              .map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setFilter(key)}
+                  style={{
+                    padding: "8px 16px",
+                    background:
+                      filter === key ? "rgba(193,255,114,0.15)" : "transparent",
+                    border: `1px solid ${filter === key ? "rgba(193,255,114,0.4)" : "var(--border)"}`,
+                    borderRadius: "100px",
+                    color: filter === key ? "var(--lime)" : "var(--muted)",
+                    fontSize: "13px",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    fontFamily: "var(--font-body)",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  {label}
+                  {counts[key] > 0 && (
+                    <span
+                      style={{
+                        marginLeft: "6px",
+                        fontSize: "11px",
+                        opacity: 0.7,
+                      }}
+                    >
+                      {counts[key]}
+                    </span>
+                  )}
+                </button>
+              ))}
           </div>
         )}
 
-        {!isLoading && tickets.length === 0 && (
-          <div style={{ textAlign: "center", padding: "80px 0" }}>
-            <div
-              style={{
-                width: "80px",
-                height: "80px",
-                background: "var(--card)",
-                border: "1px solid var(--border)",
-                borderRadius: "20px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto 24px",
-              }}
-            >
-              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                <rect
-                  x="4"
-                  y="6"
-                  width="24"
-                  height="20"
-                  rx="3"
-                  stroke="var(--muted)"
-                  strokeWidth="1.5"
-                />
-                <path d="M4 13h24" stroke="var(--muted)" strokeWidth="1.5" />
-                <circle
-                  cx="16"
-                  cy="21"
-                  r="3"
-                  stroke="var(--muted)"
-                  strokeWidth="1.5"
-                />
-              </svg>
-            </div>
-
-            <div
-              style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "24px",
-                fontWeight: 700,
-                marginBottom: "12px",
-              }}
-            >
-              No tickets yet
-            </div>
-
-            <p
-              style={{
-                color: "var(--muted)",
-                fontSize: "15px",
-                maxWidth: "300px",
-                margin: "0 auto 32px",
-              }}
-            >
-              Browse upcoming events and grab your first ticket.
-            </p>
-
-            <Link
-              href="/events"
-              style={{
-                padding: "14px 32px",
-                background: "var(--lime)",
-                color: "var(--black)",
-                borderRadius: "100px",
-                textDecoration: "none",
-                fontSize: "15px",
-                fontWeight: 500,
-                fontFamily: "var(--font-body)",
-              }}
-            >
-              Discover events
-            </Link>
-          </div>
-        )}
-
+        {/* Tickets grid */}
         {!isLoading && filtered.length > 0 && (
           <div
             style={{
@@ -684,23 +665,29 @@ export default function MyTicketsPage() {
           </div>
         )}
 
-        {!isLoading && filter !== "ALL" && filtered.length === 0 && (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "60px 0",
-              color: "var(--muted)",
-            }}
-          >
-            No {filter.toLowerCase().replace("_", " ")} tickets.
-          </div>
-        )}
+        {!isLoading &&
+          sourceTickets.length > 0 &&
+          filtered.length === 0 &&
+          filter !== "ALL" && (
+            <div
+              style={{
+                textAlign: "center",
+                padding: "60px 0",
+                color: "var(--muted)",
+              }}
+            >
+              No {filter.toLowerCase().replace("_", " ")} tickets.
+            </div>
+          )}
       </div>
 
       <style>{`
         @keyframes shimmer {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>

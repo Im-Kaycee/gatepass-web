@@ -73,6 +73,7 @@ export default function Navbar() {
           { label: "Discover", href: "/events" },
           { label: "Marketplace", href: "/marketplace" },
           { label: "Host an event", href: "/events/create" },
+          { label: "Dashboard", href: "/dashboard" },
         ].map(({ label, href }) => (
           <li key={href}>
             <Link
@@ -307,6 +308,7 @@ export default function Navbar() {
           {[
             { label: "Discover", href: "/events" },
             { label: "Marketplace", href: "/marketplace" },
+            { label: "Dashboard", href: "/dashboard" },
             { label: "My tickets", href: "/my-tickets" },
             { label: "Host an event", href: "/events/create" },
           ].map(({ label, href }) => (

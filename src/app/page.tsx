@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuthStore } from "@/store/auth";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 
@@ -125,6 +126,8 @@ const QR_PATTERN = [
 ];
 
 export default function LandingPage() {
+  const { isAuthenticated } = useAuthStore();
+
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
@@ -1143,7 +1146,7 @@ export default function LandingPage() {
             </div>
             <div style={{ marginTop: "40px" }}>
               <Link
-                href="/register"
+                href={isAuthenticated ? "/dashboard" : "/register"}
                 style={{
                   padding: "16px 36px",
                   background: "var(--lime)",
@@ -1156,7 +1159,7 @@ export default function LandingPage() {
                   display: "inline-block",
                 }}
               >
-                Start hosting for free
+                {isAuthenticated ? "Go to dashboard" : "Start hosting for free"}
               </Link>
             </div>
           </div>
