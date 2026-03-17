@@ -1,12 +1,13 @@
 import { create } from 'zustand'
 import { User } from '@/types'
 import api from '@/lib/axios'
+import { getToken, setToken, removeToken } from '@/lib/tokens'
 
 interface AuthState {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
-  login: (email: string, password: string) => Promise<void>
+  login: (username: string, password: string) => Promise<void>
   logout: () => void
   fetchUser: () => Promise<void>
 }
@@ -20,11 +21,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true })
     try {
       const { data } = await api.post('/accounts/login/', { username, password })
-      localStorage.setItem('access_token', data.access)
-      localStorage.setItem('refresh_token', data.refresh)
+      setToken('access_token', data.access)
+      setToken('refresh_token', data.refresh)
       set({ isAuthenticated: true })
-      
-      // Fetch user profile after login
+
       const { data: user } = await api.get('/accounts/me/')
       set({ user, isLoading: false })
     } catch (error) {
@@ -34,25 +34,25 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: () => {
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
-    set({ user: null, isAuthenticated: false })
+    removeToken('access_token')
+    removeToken('refresh_token')
+    set({ user: null, isAuthenticated: false, isLoading: false })
     window.location.href = '/login'
   },
 
   fetchUser: async () => {
-  const token = localStorage.getItem('access_token')
-  if (!token) {
-    set({ isLoading: false })  // ← must set false even when no token
-    return
-  }
+    const token = getToken('access_token')
+    if (!token) {
+      set({ isLoading: false })
+      return
+    }
 
-  set({ isLoading: true })
-  try {
-    const { data } = await api.get('/accounts/me/')
-    set({ user: data, isAuthenticated: true, isLoading: false })
-  } catch {
-    set({ isLoading: false })
-  }
-},
+    set({ isLoading: true })
+    try {
+      const { data } = await api.get('/accounts/me/')
+      set({ user: data, isAuthenticated: true, isLoading: false })
+    } catch {
+      set({ isLoading: false })
+    }
+  },
 }))
