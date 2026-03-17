@@ -74,11 +74,15 @@ export default function EventDashboardPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuthStore();
   const [activeTab, setActiveTab] = useState<
-    "overview" | "orders" | "attendance"
+    "overview" | "orders" | "attendance" | "staff"
   >("overview");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [ordersPage, setOrdersPage] = useState(1);
+  const [staffUsername, setStaffUsername] = useState("");
+  const [staffError, setStaffError] = useState("");
+  const [staffSuccess, setStaffSuccess] = useState("");
+  const [staffLoading, setStaffLoading] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -137,6 +141,54 @@ export default function EventDashboardPage() {
     enabled: isAuthenticated && activeTab === "attendance",
   });
 
+  const { data: staffList, refetch: refetchStaff } = useQuery({
+    queryKey: ["event-staff", params.id],
+    queryFn: async () => {
+      const { data } = await api.get(`/events/${params.id}/staff/`);
+      return data;
+    },
+    enabled: isAuthenticated && activeTab === "staff",
+  });
+
+  const handleAddStaff = async () => {
+    if (!staffUsername.trim()) return;
+    setStaffLoading(true);
+    setStaffError("");
+    setStaffSuccess("");
+
+    try {
+      const { data: userData } = await api.get(
+        `/accounts/find-user/?username=${staffUsername}`,
+      );
+      await api.post(`/events/${params.id}/add-staff/${userData.id}/`);
+      setStaffSuccess(`${staffUsername} added as staff.`);
+      setStaffUsername("");
+      refetchStaff();
+    } catch (err: any) {
+      setStaffError(
+        err.response?.data?.error ||
+          err.response?.data?.detail ||
+          "User not found or already has a role.",
+      );
+    } finally {
+      setStaffLoading(false);
+    }
+  };
+
+  const handleRemoveStaff = async (userId: number, username: string) => {
+    setStaffError("");
+    setStaffSuccess("");
+    try {
+      await api.delete(`/events/${params.id}/remove-staff/${userId}/`);
+      setStaffSuccess(`${username} removed.`);
+      refetchStaff();
+    } catch (err: any) {
+      setStaffError(
+        err.response?.data?.error || "Could not remove staff member.",
+      );
+    }
+  };
+
   if (authLoading) {
     return (
       <div
@@ -167,6 +219,7 @@ export default function EventDashboardPage() {
     { key: "overview", label: "Overview" },
     { key: "orders", label: "Orders" },
     { key: "attendance", label: "Attendance" },
+    { key: "staff", label: "Staff" },
   ] as const;
 
   return (
@@ -342,6 +395,7 @@ export default function EventDashboardPage() {
             borderRadius: "12px",
             marginBottom: "32px",
             width: "fit-content",
+            flexWrap: "wrap",
           }}
         >
           {tabs.map(({ key, label }) => (
@@ -724,6 +778,250 @@ export default function EventDashboardPage() {
                   }}
                 >
                   No check-ins yet.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Staff tab */}
+        {activeTab === "staff" && (
+          <div>
+            <h2
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "18px",
+                fontWeight: 700,
+                letterSpacing: "-0.5px",
+                marginBottom: "24px",
+              }}
+            >
+              Staff management
+            </h2>
+
+            {/* Add staff */}
+            <div
+              style={{
+                padding: "24px",
+                background: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: "16px",
+                marginBottom: "24px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  color: "var(--muted)",
+                  marginBottom: "12px",
+                }}
+              >
+                Add staff by username
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  flexWrap: "wrap",
+                }}
+              >
+                <input
+                  type="text"
+                  value={staffUsername}
+                  onChange={(e) => {
+                    setStaffUsername(e.target.value);
+                    setStaffError("");
+                    setStaffSuccess("");
+                  }}
+                  placeholder="Enter username..."
+                  style={{
+                    flex: 1,
+                    minWidth: "200px",
+                    padding: "12px 16px",
+                    background: "var(--card2)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "10px",
+                    color: "var(--white)",
+                    fontSize: "14px",
+                    fontFamily: "var(--font-body)",
+                    outline: "none",
+                    transition: "border-color 0.2s",
+                  }}
+                  onFocus={(e) =>
+                    (e.target.style.borderColor = "rgba(193,255,114,0.4)")
+                  }
+                  onBlur={(e) => (e.target.style.borderColor = "var(--border)")}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddStaff()}
+                />
+                <button
+                  onClick={handleAddStaff}
+                  disabled={!staffUsername.trim() || staffLoading}
+                  style={{
+                    padding: "12px 24px",
+                    background:
+                      !staffUsername.trim() || staffLoading
+                        ? "rgba(193,255,114,0.3)"
+                        : "var(--lime)",
+                    color: "var(--black)",
+                    border: "none",
+                    borderRadius: "10px",
+                    fontSize: "14px",
+                    fontWeight: 500,
+                    cursor:
+                      !staffUsername.trim() || staffLoading
+                        ? "not-allowed"
+                        : "pointer",
+                    fontFamily: "var(--font-body)",
+                    transition: "all 0.2s",
+                    whiteSpace: "nowrap" as const,
+                  }}
+                >
+                  {staffLoading ? "Adding..." : "Add staff"}
+                </button>
+              </div>
+
+              {staffError && (
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "#ff6666",
+                    marginTop: "8px",
+                  }}
+                >
+                  {staffError}
+                </p>
+              )}
+              {staffSuccess && (
+                <p
+                  style={{
+                    fontSize: "12px",
+                    color: "var(--lime)",
+                    marginTop: "8px",
+                  }}
+                >
+                  {staffSuccess}
+                </p>
+              )}
+            </div>
+
+            {/* Staff list */}
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+            >
+              {(staffList || []).map((member: any) => (
+                <div
+                  key={member.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "16px 20px",
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "12px",
+                    gap: "16px",
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "50%",
+                        background:
+                          member.role === "ORGANIZER"
+                            ? "rgba(193,255,114,0.1)"
+                            : "rgba(255,255,255,0.05)",
+                        border: `1px solid ${
+                          member.role === "ORGANIZER"
+                            ? "rgba(193,255,114,0.3)"
+                            : "var(--border)"
+                        }`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontFamily: "var(--font-display)",
+                        fontSize: "14px",
+                        fontWeight: 700,
+                        color:
+                          member.role === "ORGANIZER"
+                            ? "var(--lime)"
+                            : "var(--muted)",
+                      }}
+                    >
+                      {member.user[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "14px", fontWeight: 500 }}>
+                        {member.user}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "11px",
+                          textTransform: "uppercase",
+                          letterSpacing: "1px",
+                          color:
+                            member.role === "ORGANIZER"
+                              ? "var(--lime)"
+                              : "var(--muted)",
+                        }}
+                      >
+                        {member.role}
+                      </div>
+                    </div>
+                  </div>
+
+                  {member.role === "STAFF" && (
+                    <button
+                      onClick={() =>
+                        handleRemoveStaff(member.user_id, member.user)
+                      }
+                      style={{
+                        padding: "8px 16px",
+                        background: "transparent",
+                        border: "1px solid rgba(255,68,68,0.3)",
+                        borderRadius: "8px",
+                        fontSize: "13px",
+                        color: "#ff6666",
+                        cursor: "pointer",
+                        fontFamily: "var(--font-body)",
+                        transition: "all 0.2s",
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLElement).style.background =
+                          "rgba(255,68,68,0.08)";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLElement).style.background =
+                          "transparent";
+                      }}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              {staffList?.length === 0 && (
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "40px",
+                    color: "var(--muted)",
+                    fontSize: "14px",
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "12px",
+                  }}
+                >
+                  No staff added yet. Add staff members above.
                 </div>
               )}
             </div>

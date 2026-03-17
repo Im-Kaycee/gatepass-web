@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import { Ticket } from "@/types";
 import { useAuthStore } from "@/store/auth";
+import { QRCodeCanvas } from "qrcode.react";
 
 const QR_PATTERN = [
   1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 0, 1,
@@ -117,6 +118,8 @@ function StatusBadge({ status }: { status: Ticket["status"] }) {
 }
 
 function QRBack({ ticket }: { ticket: Ticket }) {
+  const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/checkin?ticket_id=${ticket.id}&sig=${ticket.qr_signature}`;
+
   return (
     <div
       style={{
@@ -152,22 +155,14 @@ function QRBack({ ticket }: { ticket: Ticket }) {
           padding: "16px",
           background: "white",
           borderRadius: "12px",
-          display: "grid",
-          gridTemplateColumns: "repeat(7, 1fr)",
-          gap: "3px",
-          width: "140px",
-          height: "140px",
         }}
       >
-        {QR_PATTERN.map((v, i) => (
-          <div
-            key={i}
-            style={{
-              borderRadius: "1px",
-              background: v ? "#000" : "#fff",
-            }}
-          />
-        ))}
+        <QRCodeCanvas
+          value={verifyUrl}
+          size={140}
+          level="H"
+          includeMargin={false}
+        />
       </div>
 
       <div

@@ -514,22 +514,14 @@ export default function TicketPage() {
                     padding: "16px",
                     background: "white",
                     borderRadius: "12px",
-                    display: "grid",
-                    gridTemplateColumns: "repeat(7, 1fr)",
-                    gap: "4px",
-                    width: "160px",
-                    height: "160px",
                   }}
                 >
-                  {QR_PATTERN.map((v, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        borderRadius: "1px",
-                        background: v ? "#000" : "#fff",
-                      }}
-                    />
-                  ))}
+                  <QRCode
+                    value={`${process.env.NEXT_PUBLIC_SITE_URL}/checkin?ticket_id=${ticket.id}&sig=${ticket.qr_signature}`}
+                    size={160}
+                    level="H"
+                    includeMargin={false}
+                  />
                 </div>
                 <div style={{ textAlign: "center" }}>
                   <div

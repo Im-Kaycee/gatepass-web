@@ -1,33 +1,39 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuthStore } from "@/store/auth";
 
 export default function PaymentCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const reference = searchParams.get("reference");
-  const trxref = searchParams.get("trxref");
+  const { fetchUser } = useAuthStore();
+  const [message, setMessage] = useState("Confirming your payment...");
 
   useEffect(() => {
-    // Invalidate tickets and orders so they refetch fresh data
-    queryClient.invalidateQueries({ queryKey: ["my-tickets"] });
-    queryClient.invalidateQueries({ queryKey: ["my-tickets-valid"] });
-    queryClient.invalidateQueries({ queryKey: ["marketplace"] });
+    const handleCallback = async () => {
+      setMessage("Confirming your payment...");
 
-    // Give the webhook a moment to process then redirect
-    const timer = setTimeout(() => {
-      if (reference?.startsWith("resale_")) {
-        router.push("/my-tickets");
-      } else {
-        router.push("/my-tickets");
-      }
-    }, 2000);
+      // Force fresh user fetch to ensure correct user is loaded
+      await fetchUser();
 
-    return () => clearTimeout(timer);
-  }, [reference, trxref]);
+      // Invalidate all relevant queries
+      queryClient.invalidateQueries({ queryKey: ["my-tickets"] });
+      queryClient.invalidateQueries({ queryKey: ["my-tickets-valid"] });
+      queryClient.invalidateQueries({ queryKey: ["marketplace"] });
+
+      setMessage("Payment confirmed. Loading your tickets...");
+
+      // Give webhook a moment to process then redirect
+      setTimeout(() => {
+        router.push("/my-tickets");
+      }, 2000);
+    };
+
+    handleCallback();
+  }, []);
 
   return (
     <div
@@ -77,9 +83,7 @@ export default function PaymentCallbackPage() {
         >
           Payment successful
         </h1>
-        <p style={{ color: "var(--muted)", fontSize: "15px" }}>
-          Your ticket is being processed. Redirecting you now...
-        </p>
+        <p style={{ color: "var(--muted)", fontSize: "15px" }}>{message}</p>
       </div>
 
       <div
