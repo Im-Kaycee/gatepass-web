@@ -93,7 +93,7 @@ export default function RegisterPage() {
               "radial-gradient(ellipse 80% 60% at 80% 20%, rgba(255,107,53,0.07) 0%, transparent 60%)",
           }}
         />
-
+        {/* Wordmark */}
         <Link href="/" style={{ textDecoration: "none" }}>
           <span
             style={{
@@ -104,7 +104,7 @@ export default function RegisterPage() {
               color: "var(--white)",
             }}
           >
-            Gate<span style={{ color: "var(--lime)" }}>pass</span>
+            {/*Gate<span style={{ color: "var(--lime)" }}>pass</span>*/}
           </span>
         </Link>
 
@@ -208,7 +208,7 @@ export default function RegisterPage() {
                 color: "var(--white)",
               }}
             >
-              Gate<span style={{ color: "var(--lime)" }}>pass</span>
+              {/*Gate<span style={{ color: "var(--lime)" }}>pass</span>*/}
             </span>
           </Link>
         </div>

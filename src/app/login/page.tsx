@@ -69,7 +69,7 @@ export default function LoginPage() {
               color: "var(--white)",
             }}
           >
-            Gate<span style={{ color: "var(--lime)" }}>pass</span>
+            {/*Gate<span style={{ color: "var(--lime)" }}>pass</span>*/}
           </span>
         </Link>
 
@@ -218,7 +218,7 @@ export default function LoginPage() {
                 color: "var(--white)",
               }}
             >
-              Gate<span style={{ color: "var(--lime)" }}>pass</span>
+              {/*Gate<span style={{ color: "var(--lime)" }}>pass</span>*/}
             </span>
           </Link>
         </div>

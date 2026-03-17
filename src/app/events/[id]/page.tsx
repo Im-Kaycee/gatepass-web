@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { Event, TicketType } from "@/types";
 import { useAuthStore } from "@/store/auth";
+import CopyButton from "@/components/ui/CopyButton";
 
 const CalendarIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -673,6 +674,10 @@ export default function EventPage() {
               </div>
             </div>
           </div>
+          <CopyButton
+            text={`${process.env.NEXT_PUBLIC_SITE_URL}/events/${event.id}`}
+            label="Copy event link"
+          />
 
           {/* Description */}
           <div style={{ marginBottom: "32px" }}>

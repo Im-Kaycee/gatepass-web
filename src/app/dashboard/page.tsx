@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { useAuthStore } from "@/store/auth";
+import CopyButton from "@/components/ui/CopyButton";
 
 const CalendarIcon = () => (
   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -258,6 +259,10 @@ function EventRow({ event }: { event: any }) {
       <div style={{ color: "var(--muted)", flexShrink: 0 }}>
         <ChevronIcon />
       </div>
+      <CopyButton
+        text={`${process.env.NEXT_PUBLIC_SITE_URL}/events/${event.event_id}`}
+        label="Copy"
+      />
     </Link>
   );
 }

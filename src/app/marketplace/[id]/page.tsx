@@ -7,7 +7,7 @@ import Link from "next/link";
 import api from "@/lib/axios";
 import { MarketplaceListing } from "@/types";
 import { useAuthStore } from "@/store/auth";
-
+import CopyButton from "@/components/ui/CopyButton";
 const BackIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
     <path
@@ -260,8 +260,11 @@ export default function MarketplaceListingPage() {
             <div style={{ fontSize: "14px", color: "var(--muted)" }}>
               Listed by {listing.seller_name}
             </div>
-          </div>
-
+          </div>{" "}
+          <CopyButton
+            text={`${process.env.NEXT_PUBLIC_SITE_URL}/marketplace/${listing.id}`}
+            label="Copy listing link"
+          />
           {/* Perforated divider */}
           <div
             style={{ height: "1px", position: "relative", margin: "0 -1px" }}
@@ -300,7 +303,6 @@ export default function MarketplaceListingPage() {
               }}
             />
           </div>
-
           <div style={{ padding: "32px" }}>
             <div
               style={{
