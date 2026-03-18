@@ -23,7 +23,7 @@ const BackIcon = () => (
 export default function ListTicketPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuthStore();
   const [selectedTicketId, setSelectedTicketId] = useState("");
   const [price, setPrice] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,6 +34,16 @@ export default function ListTicketPage() {
       router.push("/login");
     }
   }, [isAuthenticated, authLoading, router]);
+  useEffect(() => {
+    if (
+      !authLoading &&
+      isAuthenticated &&
+      user &&
+      !user.paystack_subaccount_code
+    ) {
+      router.push("/onboarding");
+    }
+  }, [isAuthenticated, authLoading, user]);
 
   const { data: tickets = [], isLoading } = useQuery<Ticket[]>({
     queryKey: ["my-tickets-valid"],

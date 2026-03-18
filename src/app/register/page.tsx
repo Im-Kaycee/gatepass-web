@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import { useAuthStore } from "@/store/auth";
+import { setToken } from "@/lib/tokens";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -28,8 +29,8 @@ export default function RegisterPage() {
 
     try {
       const { data } = await api.post("/accounts/register/", form);
-      localStorage.setItem("access_token", data.token.access);
-      localStorage.setItem("refresh_token", data.token.refresh);
+      setToken("access_token", data.token.access);
+      setToken("refresh_token", data.token.refresh);
       await fetchUser();
       router.push("/events");
     } catch (err: any) {

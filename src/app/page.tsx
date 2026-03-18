@@ -1469,10 +1469,15 @@ export default function LandingPage() {
           © 2026 Gatepass. Your pass to everything.
         </span>
         <ul style={{ display: "flex", gap: "24px", listStyle: "none" }}>
-          {["Privacy", "Terms", "Support"].map((item) => (
-            <li key={item}>
+          {[
+            { label: "Privacy", href: "/privacy" },
+            { label: "Terms", href: "/terms" },
+            { label: "How it works", href: "/how-it-works" },
+            { label: "Support", href: "mailto:support@gatepass.app" },
+          ].map(({ label, href }) => (
+            <li key={label}>
               <Link
-                href="#"
+                href={href}
                 style={{
                   fontSize: "13px",
                   color: "var(--muted)",
@@ -1480,7 +1485,7 @@ export default function LandingPage() {
                   transition: "color 0.2s",
                 }}
               >
-                {item}
+                {label}
               </Link>
             </li>
           ))}

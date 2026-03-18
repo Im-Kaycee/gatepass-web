@@ -152,8 +152,8 @@ export default function CreateEventPage() {
         e.name = "Name is required";
         valid = false;
       }
-      if (!tt.price || Number(tt.price) < 1) {
-        e.price = "Price must be at least ₦1";
+      if (!tt.price || Number(tt.price) < 500) {
+        e.price = "Price must be at least ₦500";
         valid = false;
       }
       if (!tt.quantity || Number(tt.quantity) < 1) {
@@ -823,7 +823,7 @@ export default function CreateEventPage() {
                             updateTicketType(index, "price", e.target.value)
                           }
                           placeholder="5000"
-                          min={1}
+                          min={500}
                           style={inputStyle}
                           onFocus={(e) =>
                             (e.target.style.borderColor =
